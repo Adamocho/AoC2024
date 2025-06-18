@@ -17,14 +17,14 @@ fn fix_bad_update(mut update: Vec<u32>, rules: &HashMap<u32, Vec<u32>>) -> Optio
     let mut incorrect_index: usize;
     let mut helper: u32;
     let mut loop_limiter = LIMIT;
-    const LIMIT: u32 = 15;
+    const LIMIT: u32 = 1000;
     // let mut difference: i32;
     while loop_limiter > 0 {
         if is_update_correct(&update, rules) { return Some(update); }
 
         incorrect_index = return_incorrect_index(&update, rules).unwrap_or(0);
 
-        dbg!(&update, incorrect_index);
+        // dbg!(&update, incorrect_index);
 
         // difference = if incorrect_index == 0 { 1 } else { -1 };
         if incorrect_index == 0 { break; }
@@ -53,8 +53,8 @@ fn return_incorrect_index(update: &Vec<u32>, rules: &HashMap<u32, Vec<u32>>) -> 
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut joined_lines = Default::default();
-    let _ = File::open("./example.txt")?
-    // let _ = File::open("./input.txt")?
+    // let _ = File::open("./example.txt")?
+    let _ = File::open("./input.txt")?
         .read_to_string(&mut joined_lines);
 
     let mut rules: HashMap<u32, Vec<u32>> = HashMap::new();
