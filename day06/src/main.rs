@@ -1,10 +1,4 @@
-use std::{error::Error, fs::File, io::Read, num, result};
-
-#[derive(PartialEq, Clone, Copy, Debug)]
-struct Position {
-    coords: (usize, usize),
-    direction: GuardDirection
-}
+use std::{collections::HashMap, error::Error, fs::File, io::Read};
 
 #[derive(PartialEq, Clone, Copy, Debug)]
 enum GuardDirection {
@@ -88,20 +82,15 @@ impl Map {
         }
     }
 
-    fn simulate_guard_moves(&mut self) -> usize {
-        let mut counter = 0;
-        let max_steps = 20_000;
-        while counter < max_steps {
-            counter += 1;
-            // let guard_position = self.guard_square.0 * self.width + self.guard_square.1;
-
+    fn simulate_guard_moves(&mut self) {
+        loop {
             // boundary checks
             if  (self.guard_direction == GuardDirection::Up && self.guard_coords.0 == 0) ||
                 (self.guard_direction == GuardDirection::Down && self.guard_coords.0 == self.height - 1) ||
                 (self.guard_direction == GuardDirection::Left && self.guard_coords.1 == 0) ||
                 (self.guard_direction == GuardDirection::Right && self.guard_coords.1 == self.width - 1) {
                 self.squares[self.guard_coords.0][self.guard_coords.1] = SquareType::Path;
-                return counter;
+                return;
             }
 
             let next_move: (i32, i32) = match self.guard_direction {
@@ -126,7 +115,6 @@ impl Map {
                     GuardDirection::Down => GuardDirection::Left,
                     GuardDirection::Left => GuardDirection::Up,
                 };
-                // dbg!("turn!");
                 continue;
             }
 
@@ -142,9 +130,69 @@ impl Map {
                 y,
                 x
             );
-            // dbg!(self.guard_coords);
         }
-        counter
+    }
+
+    fn simulate_guard_moves_with_loop_detection(&mut self) -> bool {
+        let mut loop_detector: HashMap<(usize, usize), GuardDirection> = HashMap::new();
+
+        loop {
+            // boundary checks
+            if  (self.guard_direction == GuardDirection::Up && self.guard_coords.0 == 0) ||
+                (self.guard_direction == GuardDirection::Down && self.guard_coords.0 == self.height - 1) ||
+                (self.guard_direction == GuardDirection::Left && self.guard_coords.1 == 0) ||
+                (self.guard_direction == GuardDirection::Right && self.guard_coords.1 == self.width - 1) {
+                self.squares[self.guard_coords.0][self.guard_coords.1] = SquareType::Path;
+                return false;
+            }
+
+            let next_move: (i32, i32) = match self.guard_direction {
+                GuardDirection::Up => (-1, 0),
+                GuardDirection::Down => (1, 0),
+                GuardDirection::Left => (0, -1),
+                GuardDirection::Right => (0, 1),
+            };
+
+            let next_square = &self.squares
+                [(self.guard_coords.0 as i32 + next_move.0) as usize]
+                [(self.guard_coords.1 as i32 + next_move.1) as usize];
+
+            let is_blocked = *next_square == SquareType::Block;
+                
+            // block checks
+            if is_blocked {
+                // turn 90 deg
+                self.guard_direction = match self.guard_direction {
+                    GuardDirection::Up => GuardDirection::Right,
+                    GuardDirection::Right => GuardDirection::Down,
+                    GuardDirection::Down => GuardDirection::Left,
+                    GuardDirection::Left => GuardDirection::Up,
+                };
+                continue;
+            }
+
+            if let Some(direction) = loop_detector.get(&self.guard_coords) {
+                if self.guard_direction == *direction {
+                    return true;
+                }
+            }
+
+            loop_detector.insert(self.guard_coords, self.guard_direction);
+
+
+            let y = (self.guard_coords.0 as i32 + next_move.0) as usize;
+            let x = (self.guard_coords.1 as i32 + next_move.1) as usize;
+
+            // finally make a move
+            self.squares
+                [(self.guard_coords.0 as i32 + next_move.0) as usize]
+                [(self.guard_coords.1 as i32 + next_move.1) as usize] = SquareType::Guard(self.guard_direction);
+            self.squares[self.guard_coords.0][self.guard_coords.1] = SquareType::Path;
+            self.guard_coords = (
+                y,
+                x
+            );
+        }
     }
 
     fn count_guard_moves(&self) -> usize {
@@ -190,17 +238,10 @@ impl Map {
 
             self.squares[obstruction.0][obstruction.1] = SquareType::Block;
 
-            let number_of_steps = self.simulate_guard_moves();
-
-            // dbg!(obstruction, number_of_steps);
-
-            if number_of_steps == 20_000 {
-                return true;
-            }
-            return false;
+            self.simulate_guard_moves_with_loop_detection()
         });
 
-        return results.filter(|result| *result).count() as u32
+        results.filter(|result| *result).count() as u32
     }
 }
 
