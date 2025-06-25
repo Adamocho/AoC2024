@@ -1,15 +1,16 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
+use serde_json::{Result, from_file};
 
 #[derive(Serialize, Deserialize)]
-struct Person {
-    name: String,
-    age: u8,
-    phones: Vec<String>,
+struct Equation {
+    sum: i32,
+    values: Vec<i32>,
 }
 
 fn main() -> Result<()> {
-    println!("Hello, world!");
+    
+    let eqations: Vec<Equation> = serde_json::from_file("input.json")?;
+    // eqations: Vec<Equations> = serde::from_file("example.json")?;
 
     Ok(())
 }
