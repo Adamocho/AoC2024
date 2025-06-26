@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{Result};
-use core::panic;
-use std::{fs::{self, Permissions}, vec};
+// use core::panic;
+use std::{fs, vec};
 // use std::error::Error;
 // use serde::de::Error;
 // use serde::ser::Error;
@@ -26,12 +26,20 @@ struct Equation {
 #[derive(Debug)]
 enum Symbol {
     Add,
-    Multiply
+    Multiply,
+    Concat
 }
+
+const MY_RADIX: i32 = 3;
 
 fn check_if_equation_can_be_true(equation: &Equation) -> bool {
     let permutations: Vec<Vec<Symbol>> = generate_permutations(equation.values.len() as u32);
+    // dbg!(permutations.len());
+    // panic!();
+
     let mut result: i64;
+    let mut left_side: String;
+    let mut right_side: String;
 
     for permutation in permutations {
         result = equation.values[0];
@@ -42,11 +50,26 @@ fn check_if_equation_can_be_true(equation: &Equation) -> bool {
                 },
                 Symbol::Multiply => {
                     result *= equation.values[index + 1];
-                }
+                },
+                Symbol::Concat => {
+                    left_side = result.to_string();
+                    right_side = equation.values[index + 1].to_string();
+                    // println!("before: {}, {}", left_side, right_side);
+
+                    let joined= (left_side + &right_side).parse();
+
+                    if joined.is_err() {
+                        panic!("That's the one");
+                    }
+
+                    if let Ok(new_value) = joined {
+                        result = new_value;
+                        // println!("after: {}", &result);
+                    }                }
             }
-            if result > equation.sum {
-                break;
-            }
+            // if result > equation.sum {
+            //     break;
+            // }
         }
         if result == equation.sum {
             return true;
@@ -58,31 +81,51 @@ fn check_if_equation_can_be_true(equation: &Equation) -> bool {
 fn generate_permutations(length: u32) -> Vec<Vec<Symbol>> {
     let mut number = 0;
     let mut permutations: Vec<Vec<Symbol>> = vec![];
-    let upper_limit = 2_i32.pow(length - 1);
+    let upper_limit = 3_i32.pow(length - 1);
 
     let mut symbols: Vec<Symbol>;
     let mut copied_number;
     let mut ending_digit: i32;
     let mut new_symbol: Symbol;
+    let mut formatted_number: String;
 
     while number < upper_limit {
         symbols = vec![];
         copied_number = number;
 
-        for _ in 1..length {
-            ending_digit = copied_number % 2;
-            new_symbol = match ending_digit {
+        formatted_number = format_radix(copied_number as u32, MY_RADIX as u32);
+        ending_digit = formatted_number.parse().unwrap_or(0);
+        // dbg!(&formatted_number);
+        for _ in 0..(length - 1) {
+            new_symbol = match (ending_digit % 10 )% MY_RADIX {
                 0 => Symbol::Add,
-                _ => Symbol::Multiply,
+                1 => Symbol::Multiply,
+                _ => Symbol::Concat
             };
 
             symbols.push(new_symbol);
-            copied_number = copied_number >> 1;
+            ending_digit /= 10;
         }
         number += 1;
         permutations.push(symbols);
     }
     permutations
+}
+
+fn format_radix(mut x: u32, radix: u32) -> String {
+    let mut result = vec![];
+
+    loop {
+        let m = x % radix;
+        x = x / radix;
+
+        // will panic if you use a bad radix (< 2 or > 36).
+        result.push(std::char::from_digit(m, radix).unwrap());
+        if x == 0 {
+            break;
+        }
+    }
+    result.into_iter().rev().collect::<String>()
 }
 
 fn main() -> Result<()> {
@@ -95,7 +138,8 @@ fn main() -> Result<()> {
         Ok(x) => x,
         Err(e) => { println!("Couln't parse object: {}", e); return Ok(()); },
     };
-    // dbg!(&lines);
+
+    dbg!(lines.lines.len());
 
     // proper equations
     let equations: Vec<Equation> = lines.lines.iter().map(|improper_equation| Equation {
@@ -106,7 +150,7 @@ fn main() -> Result<()> {
                 .collect(),
     }).collect();
 
-    // dbg!(equations.len());
+    dbg!(equations.len());
 
     let mut good_equations: Vec<Equation> = vec![];
     let mut bad_equations: Vec<Equation> = vec![];
@@ -121,6 +165,9 @@ fn main() -> Result<()> {
     });
 
     dbg!(good_equations.iter().map(|equation| equation.sum).sum::<i64>());
+    dbg!(equations.iter().map(|equation| equation.sum).sum::<i64>());
+    dbg!(bad_equations.len());
 
+    // test_check_if_equation_can_be_true();
     Ok(())
 }
