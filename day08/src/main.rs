@@ -1,6 +1,6 @@
-use serde::{de::value, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json::{Result};
-use std::{clone, collections::HashMap, fs, iter::Map, ops::Add, vec};
+use std::{collections::HashMap, fs, vec};
 
 #[derive(Deserialize, Serialize)]
 struct Input {
@@ -18,10 +18,10 @@ impl Coordinates {
         Coordinates { x: x, y: y }
     }
 
-    fn add(&mut self, other: Coordinates) {
-        self.x += other.x;
-        self.y += other.y;
-    }
+    // fn add(&mut self, other: Coordinates) {
+    //     self.x += other.x;
+    //     self.y += other.y;
+    // }
 
     fn distance(&self, other: &Coordinates) -> Coordinates {
         Coordinates {
@@ -48,21 +48,20 @@ impl Coordinates {
         Coordinates { x: one.x + two.x, y: one.y + two.y }
     }
 
-    fn flip(&mut self) {
-        self.x = -self.x;
-        self.y = -self.y;
-    }
-
+    // fn flip(&mut self) {
+    //     self.x = -self.x;
+    //     self.y = -self.y;
+    // }
 }
 
 fn main() -> Result<()> {
-    // let lines: String = match fs::read_to_string("input") {
-    let lines: String = match fs::read_to_string("example") {
+    let lines: String = match fs::read_to_string("input") {
+    // let lines: String = match fs::read_to_string("easy") {
     // let lines: String = match fs::read_to_string("example") {
         Ok(x) => x,
         Err(_) => { println!("Given file doesn't exist!"); return Ok(()); },
     };
-    let mut values: Vec<String> = match serde_json::from_str::<Input>(&lines) {
+    let values: Vec<String> = match serde_json::from_str::<Input>(&lines) {
         Ok(x) => x.values,
         Err(e) => { println!("Couln't parse object: {}", e); return Ok(()); },
     };
@@ -113,24 +112,43 @@ fn main() -> Result<()> {
 
                 distance = antenna.distance(other_antenna);
                 possible_antinode = Coordinates::create(antenna, &distance);
+                // dbg!(&antenna, &other_antenna, &distance, &possible_antinode);
 
                 if possible_antinode.is_contained(map.len() as u64, map[0].len() as u64) {
-                    antinodes[possible_antinode.x as usize][possible_antinode.y as usize] = '#';
+                    antinodes[possible_antinode.y as usize][possible_antinode.x as usize] = '#';
+                    // dbg!(possible_antinode.x, possible_antinode.y);
                 }
 
-                distance.flip();
-                possible_antinode = Coordinates::create(antenna, &distance);
+                // distance.flip();
+                // possible_antinode = Coordinates::create(other_antenna, &distance);
 
-                if possible_antinode.is_contained(map.len() as u64, map[0].len() as u64) {
-                    antinodes[possible_antinode.x as usize][possible_antinode.y as usize] = '#';
-                }
+                // if possible_antinode.is_contained(map.len() as u64, map[0].len() as u64) {
+                //     antinodes[possible_antinode.x as usize][possible_antinode.y as usize] = '#';
+                // }
             }
         }
     }
 
-    for row in antinodes {
-        println!("{}", row.concat());
-    }
+    // for row in &antinodes {
+    //     for character in row {
+    //         print!("{}", character);
+    //     }
+    //     println!();
+    // }
+
+    // println!();
+    // println!();
+    // println!("-----------------------------");
+    // println!();
+    // println!();
+
+    // for row in values {
+    //     println!("{}", row);
+    // }
+
+    let sum: usize = antinodes.iter().map(|row| row.iter().filter(|character| **character == '#').count()).sum();
+    dbg!(sum);
+
 
     Ok(())
 }
