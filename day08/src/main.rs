@@ -48,6 +48,13 @@ impl Coordinates {
         Coordinates { x: one.x + two.x, y: one.y + two.y }
     }
 
+    fn times(&self, multiplicator: i64) -> Coordinates {
+        Coordinates {
+            x: self.x * multiplicator,
+            y: self.y * multiplicator
+        }
+    }
+
     // fn flip(&mut self) {
     //     self.x = -self.x;
     //     self.y = -self.y;
@@ -101,40 +108,41 @@ fn main() -> Result<()> {
     let mut key_vector: &Vec<Coordinates>;
     let mut distance: Coordinates;
     let mut possible_antinode: Coordinates;
+    let mut still_contained: bool;
+    let mut multiplicator: i64;
 
     for key in map_of_antennas.keys() {
         key_vector = map_of_antennas.get(key).unwrap();
         for antenna in key_vector {
             for other_antenna in key_vector {
+                still_contained = true;
+                multiplicator = 0;
                 if antenna.equals(&other_antenna) {
                     continue;
                 }
 
-                distance = antenna.distance(other_antenna);
-                possible_antinode = Coordinates::create(antenna, &distance);
-                // dbg!(&antenna, &other_antenna, &distance, &possible_antinode);
+                while still_contained {
+                    distance = antenna.distance(other_antenna).times(multiplicator);
+                    possible_antinode = Coordinates::create(antenna, &distance);
+                    // dbg!(&possible_antinode, &antenna, &other_antenna);
 
-                if possible_antinode.is_contained(map.len() as u64, map[0].len() as u64) {
-                    antinodes[possible_antinode.y as usize][possible_antinode.x as usize] = '#';
-                    // dbg!(possible_antinode.x, possible_antinode.y);
+                    still_contained = possible_antinode.is_contained(map.len() as u64, map[0].len() as u64);
+
+                    if still_contained {
+                        antinodes[possible_antinode.y as usize][possible_antinode.x as usize] = '#';
+                    }
+                    multiplicator += 1;
                 }
-
-                // distance.flip();
-                // possible_antinode = Coordinates::create(other_antenna, &distance);
-
-                // if possible_antinode.is_contained(map.len() as u64, map[0].len() as u64) {
-                //     antinodes[possible_antinode.x as usize][possible_antinode.y as usize] = '#';
-                // }
             }
         }
     }
 
-    // for row in &antinodes {
-    //     for character in row {
-    //         print!("{}", character);
-    //     }
-    //     println!();
-    // }
+    for row in &antinodes {
+        for character in row {
+            print!("{}", character);
+        }
+        println!();
+    }
 
     // println!();
     // println!();
