@@ -1,16 +1,46 @@
 use serde::{Deserialize, Serialize};
-use serde_json::{Result, from_file};
+use serde_json::{Result};
+use std::fs;
+// use std::error::Error;
+// use serde::de::Error;
+// use serde::ser::Error;
 
-#[derive(Serialize, Deserialize)]
-struct Equation {
-    sum: i32,
-    values: Vec<i32>,
+#[derive(Serialize, Deserialize, Debug)]
+struct Lines {
+    lines: Vec<ImproperEquation>
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct ImproperEquation {
+    sum: i64,
+    values: String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Equation {
+    sum: i32,
+    values: Vec<i32>
+}
+
+
 fn main() -> Result<()> {
+    let lines: String = match fs::read_to_string("input.json") {
+        Ok(x) => x,
+        Err(_) => { println!("Given file doesn't exist!"); return Ok(()); },
+    };
+    let lines: Lines = match serde_json::from_str(&lines) {
+        Ok(x) => x,
+        Err(e) => { println!("Couln't parse object: {}", e); return Ok(()); },
+    };
+    dbg!(&lines);
+
+    let equations: Vec<Equation> = vec![];
     
-    let eqations: Vec<Equation> = serde_json::from_file("input.json")?;
-    // eqations: Vec<Equations> = serde::from_file("example.json")?;
+    // now change them into proper equations
+    //
+    // then do a magic with changing + and * symbols and counting out the result (product)
+    // compare to the normal one
+    // done
 
     Ok(())
 }
