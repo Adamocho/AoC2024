@@ -150,14 +150,17 @@ fn better_fill_gaps(disc_map: &mut [Partition]) {
         }
         // move file
         move_file(disc_map, file.0, file.1, gap.0);
+        // debug
+        // disc_map.iter().for_each(|partition| print!("{}", partition));
+        // println!();
     }
 }
 
-fn calculate_checksum(disc_map: &[Partition]) -> u64 {
-    let mut sum: u64 = 0;
+fn calculate_checksum(disc_map: &[Partition]) -> u128 {
+    let mut sum: u128 = 0;
     for (index, partition) in disc_map.iter().enumerate() {
         if let Partition::File(value) = partition {
-            sum += *value as u64 * index as u64;
+            sum += *value as u128 * index as u128;
         }
     }
     sum
@@ -194,7 +197,7 @@ fn main() {
     }
 
     // disc_map.iter().for_each(|partition| print!("{}", partition));
-    // dbg!(lines);
+    // println!();
 
     // fill_the_gaps(&mut disc_map);
     better_fill_gaps(&mut disc_map);
