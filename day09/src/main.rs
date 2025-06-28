@@ -204,4 +204,6 @@ fn main() {
     // disc_map.iter().for_each(|partition| print!("{}", partition));
     let sum = calculate_checksum(&disc_map);
     dbg!(sum);
+
+    panic!("Incorrect answer - it lays between 6476642800819 and 6476642801819")
 }
