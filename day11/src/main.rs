@@ -27,10 +27,9 @@ fn blink(cache: &mut HashMap<u64, u64>) {
         }
     });
 
-    // update all 0-s
     let number = cache[&0];
-    *cache.entry(1).or_insert(number) += number;
-    *cache.entry(0).or_insert(0) = 0;
+    // remove 0s
+    cache.entry(0).and_modify(|value| { *value = 0 }).or_insert(0);
 
     // zero divided stones
     for stone in make_zero {
@@ -39,16 +38,22 @@ fn blink(cache: &mut HashMap<u64, u64>) {
 
     // update divided stones
     for stone in inserting {
-        *cache.entry(stone.0).or_insert(0) += stone.1;
+        cache.entry(stone.0).and_modify(|value| { *value += stone.1 }).or_insert(stone.1);
     }
+
+    // update all 1-s
+    cache.entry(1).and_modify(|value| { *value += number }).or_insert(number);
 }
 
 fn main() {
-    let lines = match fs::read_to_string("example") {
-    // let lines = match fs::read_to_string("input") {
+    // let lines = match fs::read_to_string("example") {
+    let lines = match fs::read_to_string("input") {
         Ok(x) => x,
         Err(e) => panic!("Could not access file: {}", e),
     };
+
+    let mut test = HashMap::new();
+    *test.entry("some").or_insert(10) *= 10;
 
     let stones_strings: Vec<&str> = lines.trim().split(" ").collect();
     let stones: Vec<u64> = stones_strings.iter().map(|value| value.parse().unwrap()).collect();
@@ -63,12 +68,19 @@ fn main() {
     // make sure zero is there
     let _ = cache.entry(0).or_insert(0);
 
-    while counter < 26 {
+    while counter < 75 {
         blink(&mut cache);
         counter += 1;
         dbg!(counter);
     }
 
+    // dbg!(&cache);
+
+    // cache.iter().for_each(|(x, y)| {
+    //     let repeated = (x.to_string() + " ").repeat(*y as usize);
+    //     print!("{}", repeated);
+    // });
+    
     let sum: u64 = cache.par_iter().map(|(_, y)| *y).sum();
     dbg!(sum);
     
