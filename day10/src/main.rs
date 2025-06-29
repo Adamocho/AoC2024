@@ -19,36 +19,43 @@ fn find_all_trailheads(map: &Vec<Vec<u32>>) -> Vec<Coords> {
     trailheads
 }
 
-fn find_trails(map: &Vec<Vec<u32>>, origin: Coords, level: u32) -> Vec<Coords> {
+fn find_trails(map: &Vec<Vec<u32>>, origin: Coords, level: u32) -> u32 {
     if level == 9 {
-        return vec![origin];
+        // return vec![origin].len();
+        return 1;
     }
-    let mut trails: Vec<Coords> = vec![];
+    // let mut trails: Vec<Coords> = vec![];
+    let mut sum = 0;
     let width = map[0].len();
     let height = map.len();
 
     // check directions
     // up
     if origin.y != 0            && map[origin.y - 1][origin.x] == level + 1 {
-        let mut found = find_trails(map, Coords { x: origin.x, y: origin.y - 1 }, level + 1);
-        trails.append(&mut found);
+        // let mut found = find_trails(map, Coords { x: origin.x, y: origin.y - 1 }, level + 1);
+        // trails.append(&mut found);
+        sum += find_trails(map, Coords { x: origin.x, y: origin.y - 1 }, level + 1);
     }
     // down
     if origin.y != height - 1   && map[origin.y + 1][origin.x] == level + 1 {
-        let mut found = find_trails(map, Coords { x: origin.x, y: origin.y + 1 }, level + 1);
-        trails.append(&mut found);
+        // let mut found = find_trails(map, Coords { x: origin.x, y: origin.y + 1 }, level + 1);
+        // trails.append(&mut found);
+        sum += find_trails(map, Coords { x: origin.x, y: origin.y + 1 }, level + 1);
     }
     // left
     if origin.x != 0            && map[origin.y][origin.x - 1] == level + 1 {
-        let mut found = find_trails(map, Coords { x: origin.x - 1, y: origin.y }, level + 1);
-        trails.append(&mut found);
+        // let mut found = find_trails(map, Coords { x: origin.x - 1, y: origin.y }, level + 1);
+        // trails.append(&mut found);
+        sum += find_trails(map, Coords { x: origin.x - 1, y: origin.y }, level + 1);
     }
     // right
     if origin.x != width - 1    && map[origin.y][origin.x + 1] == level + 1 {
-        let mut found = find_trails(map, Coords { x: origin.x + 1, y: origin.y }, level + 1);
-        trails.append(&mut found);
+        // let mut found = find_trails(map, Coords { x: origin.x + 1, y: origin.y }, level + 1);
+        // trails.append(&mut found);
+        sum += find_trails(map, Coords { x: origin.x + 1, y: origin.y }, level + 1);
     }
-    return trails;
+    // return trails;
+    return sum;
 }
 
 fn main() {
@@ -73,15 +80,14 @@ fn main() {
             }
         );
 
-    // dbg!(trail_map);
-
     let trailheads = find_all_trailheads(&trail_map);
-    // dbg!(trailheads);
 
     let mut score = 0;
     for trailhead in trailheads {
-        let found_trails = HashSet::<Coords>::from_iter(find_trails(&trail_map, trailhead, 0)).iter().count();
-        score += found_trails;
+        // let found_trails = HashSet::<Coords>::from_iter(find_trails(&trail_map, trailhead, 0)).iter().count();
+        // score += found_trails;
+        score += find_trails(&trail_map, trailhead, 0);
+        // dbg!(score);
     }
 
     // finalize
