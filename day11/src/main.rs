@@ -1,52 +1,75 @@
-use std::{fs, vec};
+use core::num;
+use std::{collections::{HashMap, LinkedList, VecDeque}, fs, hash::Hash, vec};
 
-fn blink<'a>(stones: &Vec<u64>) -> Vec<u64> {
-    let mut new_stones: Vec<u64> = vec![];
-    let mut value_length: usize;
-    let mut stone_string: String;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
+fn blink(cache: &mut HashMap<u64, u64>) {
+    let mut length: usize;
+    let mut operand: u64;
 
-    for stone in stones {
-        stone_string = stone.to_string();
-        value_length = stone_string.len();
+    // let numer_of_zeros = cache.entry(0).or_insert(0);
+    let mut inserting: Vec<(u64, u64)> = vec![];
+    let mut make_zero: Vec<u64> = vec![];
 
-        if *stone == 0 {
-            new_stones.push(1);
-        } else if value_length % 2 == 0 {
-            let split_stones = stone_string.split_at(value_length/2);
-            let left_stone = split_stones.0.parse::<u64>().unwrap();
-            let right_stone = split_stones.1.parse::<u64>().unwrap();
-            new_stones.push(left_stone);
-            new_stones.push(right_stone);
-        } else {
-            new_stones.push(stone * 2024);
+    cache.keys().for_each(|key| {
+        if cache[key] == 0 || *key == 0 {
+            return;
         }
+        let length = (*key as f64).log10().floor() as usize + 1;
+        let operand = 10_u64.pow(length as u32/ 2);
+        if length % 2 == 0 {
+            inserting.push((key / operand, *cache.get(key).unwrap()));
+            inserting.push((key % operand, *cache.get(key).unwrap()));
+            make_zero.push(*key);
+        } else {
+            inserting.push((key * 2024, *cache.get(key).unwrap()));    
+            make_zero.push(*key);
+        }
+    });
+
+    // update all 0-s
+    let number = cache[&0];
+    *cache.entry(1).or_insert(number) += number;
+    *cache.entry(0).or_insert(0) = 0;
+
+    // zero divided stones
+    for stone in make_zero {
+        cache.entry(stone).and_modify(|value| { *value = 0 });
     }
-    new_stones
+
+    // update divided stones
+    for stone in inserting {
+        *cache.entry(stone.0).or_insert(0) += stone.1;
+    }
 }
 
 fn main() {
-    // let lines = match fs::read_to_string("example") {
-    let lines = match fs::read_to_string("input") {
+    let lines = match fs::read_to_string("example") {
+    // let lines = match fs::read_to_string("input") {
         Ok(x) => x,
         Err(e) => panic!("Could not access file: {}", e),
     };
 
-    let stones: Vec<&str> = lines.trim().split(" ").collect();
-    let mut stones: Vec<u64> = stones.iter().map(|value| value.parse().unwrap()).collect();
+    let stones_strings: Vec<&str> = lines.trim().split(" ").collect();
+    let stones: Vec<u64> = stones_strings.iter().map(|value| value.parse().unwrap()).collect();
+
+    let mut cache: HashMap<u64, u64> = HashMap::new();
+
+    stones.iter().for_each(|stone| {
+        *cache.entry(*stone).or_insert(0) += 1;
+    });
 
     let mut counter = 0;
-    let mut new_stones = vec![];
+    // make sure zero is there
+    let _ = cache.entry(0).or_insert(0);
 
-    while counter < 25 {
-        new_stones = blink(&stones);
-        // dbg!(&new_stones);
-
+    while counter < 26 {
+        blink(&mut cache);
         counter += 1;
-        stones = new_stones;
+        dbg!(counter);
     }
 
-    let sum = stones.len();
+    let sum: u64 = cache.par_iter().map(|(_, y)| *y).sum();
     dbg!(sum);
     
 }
