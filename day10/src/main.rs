@@ -1,4 +1,55 @@
-use std::fs;
+use std::{collections::HashSet, fs, vec};
+
+#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
+struct Coords {
+    x: usize,
+    y: usize,
+}
+
+fn find_all_trailheads(map: &Vec<Vec<u32>>) -> Vec<Coords> {
+    let mut trailheads = vec![];
+
+    for (row_index, row) in map.iter().enumerate() {
+        for (column_index, terrain_height) in row.iter().enumerate() {
+            if *terrain_height == 0 {
+                trailheads.push(Coords { x: column_index, y: row_index });
+            }
+        }
+    }
+    trailheads
+}
+
+fn find_trails(map: &Vec<Vec<u32>>, origin: Coords, level: u32) -> Vec<Coords> {
+    if level == 9 {
+        return vec![origin];
+    }
+    let mut trails: Vec<Coords> = vec![];
+    let width = map[0].len();
+    let height = map.len();
+
+    // check directions
+    // up
+    if origin.y != 0            && map[origin.y - 1][origin.x] == level + 1 {
+        let mut found = find_trails(map, Coords { x: origin.x, y: origin.y - 1 }, level + 1);
+        trails.append(&mut found);
+    }
+    // down
+    if origin.y != height - 1   && map[origin.y + 1][origin.x] == level + 1 {
+        let mut found = find_trails(map, Coords { x: origin.x, y: origin.y + 1 }, level + 1);
+        trails.append(&mut found);
+    }
+    // left
+    if origin.x != 0            && map[origin.y][origin.x - 1] == level + 1 {
+        let mut found = find_trails(map, Coords { x: origin.x - 1, y: origin.y }, level + 1);
+        trails.append(&mut found);
+    }
+    // right
+    if origin.x != width - 1    && map[origin.y][origin.x + 1] == level + 1 {
+        let mut found = find_trails(map, Coords { x: origin.x + 1, y: origin.y }, level + 1);
+        trails.append(&mut found);
+    }
+    return trails;
+}
 
 fn main() {
     let lines = match fs::read_to_string("input") {
@@ -22,5 +73,17 @@ fn main() {
             }
         );
 
-    dbg!(trail_map);
+    // dbg!(trail_map);
+
+    let trailheads = find_all_trailheads(&trail_map);
+    // dbg!(trailheads);
+
+    let mut score = 0;
+    for trailhead in trailheads {
+        let found_trails = HashSet::<Coords>::from_iter(find_trails(&trail_map, trailhead, 0)).iter().count();
+        score += found_trails;
+    }
+
+    // finalize
+    dbg!(score);
 }
