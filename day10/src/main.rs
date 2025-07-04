@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs, vec};
+use std::{fs, vec};
 
 #[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
 struct Coords {
