@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs, sync::atomic::fence, vec};
+use std::{fs, vec};
 
 fn find_all_fields(
     width: &usize, height: &usize,
@@ -14,63 +14,120 @@ fn find_all_fields(
     // 4 directions check
     found_fields.push((y, x));
 
+    let mut is_up;
+    let mut is_down;
+    let mut is_left;
+    let mut is_right;
+
     // up
     if y != 0 {
-        if *field != fields_map[y - 1][x] {
-            fence_size += 1;
+        is_up = *field != fields_map[y - 1][x];
+        if !is_up && !found_fields.contains(&(y - 1, x)) {
+            result = find_all_fields(width, height, x, y - 1, field, fields_map, found_fields);
+            fence_size += result.0;
+            fields_size += result.1;
+
+            // is not up restricted
+            is_up = false;
         } else {
-            if !found_fields.contains(&(y - 1, x)) {
-                result = find_all_fields(width, height, x, y - 1, field, fields_map, found_fields);
-                fence_size += result.0;
-                fields_size += result.1;
-            }
+            // check if restricted
+            is_up = is_up || !found_fields.contains(&(y - 1, x));
         }
-    } else { // just add 1 to the fence count
-        fence_size += 1;
+    } else {
+        // restricted
+        is_up = true;
     }
 
     // down
     if y < height - 1 {
-        if *field != fields_map[y + 1][x] {
-            fence_size += 1;
+        is_down = *field != fields_map[y + 1][x];
+        if !is_down && !found_fields.contains(&(y + 1, x)) {
+            result = find_all_fields(width, height, x, y + 1, field, fields_map, found_fields);
+            fence_size += result.0;
+            fields_size += result.1;
+            
+            is_down = false;
         } else {
-            if !found_fields.contains(&(y + 1, x)) {
-                result = find_all_fields(width, height, x, y + 1, field, fields_map, found_fields);
-                fence_size += result.0;
-                fields_size += result.1;
-            }
+            is_down = is_down && !found_fields.contains(&(y + 1, x));
         }
-    } else { // just add 1 to the fence count
-        fence_size += 1;
+    } else {
+        is_down = true;
     }
 
     // left
     if x != 0 {
-        if *field != fields_map[y][x - 1] {
-            fence_size += 1;
+        is_left = *field != fields_map[y][x - 1];
+        if !is_left && !found_fields.contains(&(y, x - 1)) {
+            result = find_all_fields(width, height, x - 1, y, field, fields_map, found_fields);
+            fence_size += result.0;
+            fields_size += result.1;
+
+            is_left = false;
         } else {
-            if !found_fields.contains(&(y, x - 1)) {
-                result = find_all_fields(width, height, x - 1, y, field, fields_map, found_fields);
-                fence_size += result.0;
-                fields_size += result.1;
-            }
+            is_left = is_left && !found_fields.contains(&(y, x - 1));
         }
-    } else { // just add 1 to the fence count
-        fence_size += 1;
+    } else {
+        is_left = true;
     }
 
     // right
     if x < width - 1 {
-        if *field != fields_map[y][x + 1] {
-            fence_size += 1;
+        is_right = *field != fields_map[y][x + 1];
+        if !is_right && !found_fields.contains(&(y, x + 1)) {
+            result = find_all_fields(width, height, x + 1, y, field, fields_map, found_fields);
+            fence_size += result.0;
+            fields_size += result.1;
+
+            is_right = false;
         } else {
-            if !found_fields.contains(&(y, x + 1)) {
-                result = find_all_fields(width, height, x + 1, y, field, fields_map, found_fields);
-                fence_size += result.0;
-                fields_size += result.1;
-            }
+            is_right = is_right && !found_fields.contains(&(y, x + 1));
         }
-    } else { // just add 1 to the fence count
+    } else {
+        is_right = true;
+    }
+
+    // diagonals
+    let is_top_left = 
+        !is_up
+        && !is_left
+        && *field != fields_map[y - 1][x - 1];
+    let is_top_right = 
+        !is_up
+        && !is_right
+        && *field != fields_map[y - 1][x + 1];
+    let is_down_left = 
+        !is_down
+        && !is_left
+        && *field != fields_map[y + 1][x - 1];
+    let is_down_right = 
+        !is_down
+        && !is_right
+        && *field != fields_map[y + 1][x + 1];
+
+    // check restrictions
+    if is_up && is_left {
+        fence_size += 1;
+    }
+    if is_up && is_right {
+        fence_size += 1;
+    }
+    if is_down && is_left {
+        fence_size += 1;
+    }
+    if is_down && is_right {
+        fence_size += 1;
+    }
+
+    if is_top_left {
+        fence_size += 1;
+    }
+    if is_top_right {
+        fence_size += 1;
+    }
+    if is_down_left {
+        fence_size += 1;
+    }
+    if is_down_right {
         fence_size += 1;
     }
 
@@ -91,9 +148,6 @@ fn main() {
 
     let mut uncalculated_fields = fields.clone();
 
-    // dbg!(field);
-
-    // (nr_of_fences, size)
     let mut fence_costs: Vec<(u32, u32)> = vec![];
     let mut discovered_fields: Vec<(usize, usize)> = vec![];
 
@@ -124,5 +178,5 @@ fn main() {
 
     let cost: u32 = fence_costs.iter().map(|(fences, size)| fences * size).sum();
 
-    dbg!(cost);
+    println!("The discounted price is: {}", cost);
 }
