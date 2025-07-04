@@ -257,7 +257,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut map = Map::new(lines);
     map.simulate_guard_moves();
-    let result = map.count_guard_moves();
+    let _result = map.count_guard_moves();
 
     let result = map.simulate_and_count_obstructions();
     

@@ -1,5 +1,5 @@
 use core::panic;
-use std::{collections::{HashMap, HashSet}, fs};
+use std::{collections::HashMap, fs};
 
 fn main() {
     let lines = match fs::read_to_string("input") {
@@ -7,7 +7,7 @@ fn main() {
         Err(e) => panic!("Could not read file: {}", e)
     };
 
-    let mut stones: Vec<u64> = lines.split(" ").map(|stone| stone.parse::<u64>().unwrap()).collect();
+    let stones: Vec<u64> = lines.split(" ").map(|stone| stone.parse::<u64>().unwrap()).collect();
 
     let mut map: HashMap<u64, u64> = HashMap::new();
     let mut counter = 0;

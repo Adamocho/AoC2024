@@ -21,38 +21,38 @@ impl fmt::Display for Partition {
     }
 }
 
-fn fill_the_gaps(disc_map: &mut [Partition]) {
-    let length = disc_map.len();
-    let mut back_block: &Partition;
-    let mut front_block: &Partition;
-    let mut back_counter: usize = length - 1;
+// fn fill_the_gaps(disc_map: &mut [Partition]) {
+//     let length = disc_map.len();
+//     let mut back_block: &Partition;
+//     let mut front_block: &Partition;
+//     let mut back_counter: usize = length - 1;
 
-    let range = 0..=(length - 1);
+//     let range = 0..=(length - 1);
 
-    for index in range {
-        front_block = disc_map.get(index).unwrap();
-        if let Partition::File(_) = *front_block {
-            continue;
-        }
+//     for index in range {
+//         front_block = disc_map.get(index).unwrap();
+//         if let Partition::File(_) = *front_block {
+//             continue;
+//         }
 
-        while back_counter > index {
-            back_block = disc_map.get(back_counter).unwrap();
-            if *back_block == Partition::Space {
-                back_counter -= 1;
-                continue;
-            }
+//         while back_counter > index {
+//             back_block = disc_map.get(back_counter).unwrap();
+//             if *back_block == Partition::Space {
+//                 back_counter -= 1;
+//                 continue;
+//             }
 
-            let front_block = front_block.clone();
-            let back_block = back_block.clone();
+//             let front_block = front_block.clone();
+//             let back_block = back_block.clone();
 
-            disc_map[back_counter] = front_block;
-            disc_map[index] = back_block;
+//             disc_map[back_counter] = front_block;
+//             disc_map[index] = back_block;
 
-            back_counter -= 1;
-            break;
-        }
-    }
-}
+//             back_counter -= 1;
+//             break;
+//         }
+//     }
+// }
 
 fn move_file(disc_map: &mut [Partition], file_start: usize, file_length: usize, location_start: usize) {
     let file = disc_map[file_start].clone();
