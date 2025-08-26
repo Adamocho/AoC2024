@@ -1,6 +1,7 @@
 use std::{error::Error, fs::File, io::Read};
 use regex::Regex;
 
+#[allow(dead_code)]
 
 fn task_one(lines: String) -> i32 {
     let mut result = 0;
