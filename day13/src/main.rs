@@ -91,12 +91,11 @@ fn is_rref_int_solvable(matrix: &mut Matrix) -> bool {
     } else {
         ceiled
     };
-
-    return true;
+    true
 }
 
 fn main() {
-    let lines = match fs::read_to_string("input") {
+    let lines = match fs::read_to_string("example") {
         Ok(v) => v,
         Err(e) => panic!("{}", e),
     };
@@ -124,6 +123,9 @@ fn main() {
                     z1: z1.parse().unwrap(),
                     z2: z2.parse().unwrap()
                 };
+
+                matrix.z1 += 10_000_000_000_000.0;
+                matrix.z2 += 10_000_000_000_000.0;
             });
 
         rref(&mut matrix);
@@ -131,8 +133,9 @@ fn main() {
 
         if has_solution {
             // result += 3 * matrix[0][2] as i32 + 1 * matrix[1][2] as i32;
-            result += 3 * matrix.z1 as i32 + 1 * matrix.z2 as i32;
+            result += 3 * matrix.z1 as i64 + matrix.z2 as i64;
         }
+        dbg!(result);
     } 
     dbg!(result);
 }
