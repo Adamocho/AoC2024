@@ -2,8 +2,22 @@ use std::fs;
 
 use regex::Regex;
 
+struct Matrix {
+    x1: f64,
+    x2: f64,
+    y1: f64,
+    y2: f64,
+    z1: f64,
+    z2: f64
+}
+
 fn rref(matrix: &mut [[f64; 3]; 2]) {
     todo!("Implement Reduced Row Echelon Form");
+
+}
+
+fn swap_rows(matrix: &mut [[f64; 3]; 2]) {
+
 }
 
 fn is_rref_int_solvable(matrix: &[[f64; 3]; 2]) -> bool {
