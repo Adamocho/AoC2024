@@ -13,43 +13,42 @@ struct Matrix {
 }
 
 fn rref(matrix: &mut Matrix) {
-    let mut is_swapped = false;
+    let is_swapped = matrix.x1 > matrix.y1 && matrix.y1 != 0.0;
     // make setup optimal
-    if matrix.x1 > matrix.x2 {
+    if is_swapped {
         swap_rows(matrix);
-        is_swapped = true;
     }
 
     // top
-    if matrix.x1 != 1.0 {
+    if matrix.x1 != 0.0 {
         matrix.x2 /= matrix.x1;
         matrix.z1 /= matrix.x1;
-        matrix.x1 = 0.0;
+        matrix.x1 = 1.0;
     }
 
-    if matrix.x2 != 0.0 {
-        let scalar = 1.0 / matrix.y1;
+    if matrix.y1 != 0.0 && matrix.x1 != 0.0 {
+        let scalar = matrix.y1 / matrix.x1;
         matrix.y1 = 0.0;
         matrix.y2 -= matrix.x2 * scalar;
         matrix.z2 -= matrix.z1 * scalar;
     }
 
     // bottom
-    if matrix.y2 != 1.0 {
+    if matrix.y2 != 0.0 {
         matrix.z2 /= matrix.y2;
         matrix.y2 = 1.0;
     }
 
-    if matrix.x2 != 0.0 {
-        let scalar = 1.0 / matrix.x2;
+    if matrix.y2 != 0.0 {
+        let scalar = matrix.x2 / matrix.y2;
         matrix.x2 = 0.0;
         matrix.z1 -= matrix.z2 * scalar;
     }
 
     // swap back
-    if is_swapped {
-        swap_rows(matrix);
-    }
+    // if is_swapped {
+    //     swap_rows(matrix);
+    // }
 }
 
 fn swap_rows(matrix: &mut Matrix) {
@@ -62,12 +61,42 @@ fn swap_rows(matrix: &mut Matrix) {
     matrix.z2 = copy.z2;
 }
 
-fn is_rref_int_solvable(matrix: &Matrix) -> bool {
-    matrix.z1 == matrix.z1.floor() && matrix.z2 == matrix.z2.floor()
+fn is_rref_int_solvable(matrix: &mut Matrix) -> bool {
+    let epsilon = 0.001;
+
+    let real = matrix.z1;
+    let floored = real.floor();
+    let ceiled = real.ceil();
+
+    if real - floored > epsilon && ceiled - real > epsilon {
+        return false;
+    }
+
+    matrix.z1 = if real - floored <= epsilon {
+        floored
+    } else {
+        ceiled
+    };
+
+    let real = matrix.z2;
+    let floored = real.floor();
+    let ceiled = real.ceil();
+
+    if real - floored > epsilon && ceiled - real > epsilon {
+        return false;
+    }
+
+    matrix.z2 = if real - floored <= epsilon {
+        floored
+    } else {
+        ceiled
+    };
+
+    return true;
 }
 
 fn main() {
-    let lines = match fs::read_to_string("example") {
+    let lines = match fs::read_to_string("input") {
         Ok(v) => v,
         Err(e) => panic!("{}", e),
     };
@@ -98,7 +127,7 @@ fn main() {
             });
 
         rref(&mut matrix);
-        has_solution = is_rref_int_solvable(&matrix);
+        has_solution = is_rref_int_solvable(&mut matrix);
 
         if has_solution {
             // result += 3 * matrix[0][2] as i32 + 1 * matrix[1][2] as i32;
@@ -117,6 +146,70 @@ mod tests {
         let mut matrix = Matrix { x1: 2.0, x2: 10.0, z1: 20.0, y1: 5.0, y2: 30.0, z2: 30.0 };
         let result = Matrix { x1: 1.0, x2: 0.0, z1: 30.0, y1: 0.0, y2: 1.0, z2: -4.0 };
         rref(&mut matrix);
+        assert_eq!(matrix, result);
+    }
+
+    #[test]
+    fn rref_works_with_swap() {
+        let mut matrix = Matrix { y1: 2.0, y2: 10.0, z2: 20.0, x1: 5.0, x2: 30.0, z1: 30.0 };
+        let result = Matrix { x1: 1.0, x2: 0.0, z1: 30.0, y1: 0.0, y2: 1.0, z2: -4.0 };
+        rref(&mut matrix);
+        assert_eq!(matrix, result);
+    }
+
+    #[test]
+    fn rref_works_when_empty() {
+        let mut matrix = Matrix { x1: 1.0, x2: 0.0, z1: 1.0, y1: 0.0, y2: 1.0, z2: 1.0 };
+        let result = Matrix { x1: 1.0, x2: 0.0, z1: 1.0, y1: 0.0, y2: 1.0, z2: 1.0 };
+        rref(&mut matrix);
+        assert_eq!(matrix, result);
+    }
+
+    #[test]
+    fn is_solvable_with_ints() {
+        let mut matrix = Matrix { x1: 0.0, x2: 0.0, y1: 0.0, y2: 0.0, z1: 1.0, z2: 1.0 };
+        let is_solvable = is_rref_int_solvable(&mut matrix);
+        assert!(is_solvable);
+    }
+
+    #[test]
+    #[should_panic]
+    fn is_not_solvable_with_float() {
+        let mut matrix = Matrix { x1: 0.0, x2: 0.0, y1: 0.0, y2: 0.0, z1: 1.1, z2: 0.9 };
+        let is_solvable = is_rref_int_solvable(&mut matrix);
+        assert!(is_solvable);
+    }
+
+    #[test]
+    fn is_be_solvable_with_float() {
+        let mut matrix = Matrix { x1: 0.0, x2: 0.0, y1: 0.0, y2: 0.0, z1: 1.001, z2: 0.9999 };
+        let is_solvable = is_rref_int_solvable(&mut matrix);
+        assert!(is_solvable);
+    }
+
+    #[test]
+    fn is_be_solvable_with_float_with_high_precision() {
+        let mut matrix = Matrix { x1: 0.0, x2: 0.0, y1: 0.0, y2: 0.0, z1: 1.0000001, z2: 0.99999999 };
+        let is_solvable = is_rref_int_solvable(&mut matrix);
+        assert!(is_solvable);
+    }
+
+    #[test]
+    fn can_swapp() {
+        let mut matrix = Matrix { x1: 5.0, x2: 2.0, y1: 1.0, y2: 3.0, z1: 10.0, z2: 20.0 };
+        let original = Matrix { x1: 5.0, x2: 2.0, y1: 1.0, y2: 3.0, z1: 10.0, z2: 20.0 };
+        let result = Matrix { x1: 1.0, x2: 3.0, y1: 5.0, y2: 2.0, z1: 20.0, z2: 10.0 };
+        swap_rows(&mut matrix);
+        assert_eq!(matrix, result);
+        swap_rows(&mut matrix);
+        assert_eq!(matrix, original);
+    }
+
+    #[test]
+    fn should_swap() {
+        let mut matrix = Matrix {x1: 0.0, x2: 1.0, y1: 1.0, y2: 0.0, z1: 40.0, z2: 80.0};
+        let result = Matrix {x1: 1.0, x2: 0.0, y1: 0.0, y2: 1.0, z1: 80.0, z2: 40.0};
+        swap_rows(&mut matrix);
         assert_eq!(matrix, result);
     }
 }
