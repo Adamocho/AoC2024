@@ -115,6 +115,17 @@ fn main() {
             robot.position.y += HEIGHT as i32;
             robot.position.y %= HEIGHT as i32;
         }
+
+
+        // either a search algorithm or manually, which is not ideal
+        // the tree looks like this - of course more pretty, so there are no gaps inbetween in the map
+        // maybe I can use some algorithm to count neightbouring #-marks so that when there are more than 20 then output the map with time number
+        //  ############
+        // #############
+        //  ############
+        //   ###########
+        //    ##########
+        //     #########
         
         update_map(&mut map, &robots);
         if elapsed_seconds > 30000 {
