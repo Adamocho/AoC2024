@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Neg};
+use std::{ops::{Add, AddAssign, Neg}, thread::sleep, time::Duration};
 
 
 struct Game {
@@ -41,6 +41,7 @@ impl Neg for Vector2D {
     }
 }
 
+#[derive(Debug)]
 enum  Instruction {
     UP,
     DOWN,
@@ -49,16 +50,40 @@ enum  Instruction {
 }
 
 const MAP_STRING: &str =
-"########
-#..O.O.#
-##@.O..#
-#...O..#
-#.#.O..#
-#...O..#
-#......#
-########";
+// "########
+// #..O.O.#
+// ##@.O..#
+// #...O..#
+// #.#.O..#
+// #...O..#
+// #......#
+// ########";
 
-const INSTRUCTIONS: &str = "<^^>>>vv<v>>v<<";
+"##########
+#..O..O.O#
+#......O.#
+#.OO..O.O#
+#..O@..O.#
+#O#..O...#
+#O..O..O.#
+#.OO.O.OO#
+#....O...#
+##########";
+
+
+const INSTRUCTIONS: &str = 
+// "<^^>>>vv<v>>v<<";
+
+"<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^
+vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v
+><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<
+<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^
+^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><
+^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^
+>^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^
+<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>
+^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>
+v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^";
 
 impl Game {
     fn execute_next_cycle(&mut self, instruction: Instruction) {
@@ -160,24 +185,25 @@ fn main() {
 
     let mut instructions: Vec<Instruction> = vec![];
     for instruction in INSTRUCTIONS.chars() {
-        instructions.push(
-            match instruction {
-            '>' => Instruction::RIGHT,
-            'v' => Instruction::DOWN,
-            '<' => Instruction::LEFT,
-            '^' => Instruction::UP,
-            _ => panic!("unexpected token")
-        });
+        match instruction {
+            '>' => instructions.push(Instruction::RIGHT),
+            'v' => instructions.push(Instruction::DOWN),
+            '<' => instructions.push(Instruction::LEFT),
+            '^' => instructions.push(Instruction::UP),
+            _ => {}
+        }
     }
 
     let mut game = Game {
         map: map,
-        robot: Vector2D { x: 2, y: 2 },
+        robot: Vector2D { x: 4, y: 4 },
     };
 
     for instruction in instructions {
+        dbg!(&instruction);
         game.execute_next_cycle(instruction);
         show_map(&game.map);
+        // sleep(Duration::from_millis(2000));
     }
 
     let score = count_score(&game.map);
