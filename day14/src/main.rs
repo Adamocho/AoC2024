@@ -72,6 +72,25 @@ fn show_map(map: &[[char; WIDTH]; HEIGHT]) {
     }
 }
 
+fn can_there_be_tree(map: &[[char; WIDTH]; HEIGHT]) -> bool {
+    for x in 3..WIDTH - 3 {
+        for y in 3..HEIGHT - 3 {
+            if map[y][x] == '#'
+            && map[y-1][x] == '#'
+            && map[y-2][x] == '#'
+            && map[y][x-1] == '#'
+            && map[y][x-2] == '#'
+            && map[y+1][x] == '#'
+            && map[y+2][x] == '#'
+            && map[y][x+1] == '#'
+            && map[y][x+2] == '#' {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 const WIDTH: usize = 101;
 const CENTER_X: usize = WIDTH / 2;
 const HEIGHT: usize = 103;
@@ -128,10 +147,9 @@ fn main() {
         //     #########
         
         update_map(&mut map, &robots);
-        if elapsed_seconds > 30000 {
+        if can_there_be_tree(&map) {
             show_map(&map);
             dbg!(elapsed_seconds);
-            sleep(Duration::from_millis(10));
         }
     }
     let quadrants = cartesian_plane(&robots);
