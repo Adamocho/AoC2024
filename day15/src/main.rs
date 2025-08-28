@@ -1,4 +1,4 @@
-use std::ops::{Add, Neg};
+use std::ops::{Add, AddAssign, Neg};
 
 
 struct Game {
@@ -20,6 +20,13 @@ impl Add for Vector2D {
             x: self.x + rhs.x,
             y: self.y + rhs.y
         }
+    }
+}
+
+impl AddAssign for Vector2D {
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 
@@ -77,6 +84,7 @@ impl Game {
         if *point == '.' {
             self.map[self.robot.y as usize][self.robot.x as usize] = '.';
             self.map[future_coords.y as usize][future_coords.x as usize] = '@';
+            self.robot = future_coords;
             return
         }
         if *point == 'O' {
@@ -92,6 +100,7 @@ impl Game {
         if c == '.' {
             // move them
             self.move_objects(position, self.robot, -direction);
+            self.robot += direction;
             return
         }
         if c == 'O' {
@@ -120,7 +129,7 @@ fn count_score(map: &Vec<Vec<char>>) -> usize {
 
     for x in 0..map.len() {
         for y in 0..map[0].len() {
-            if map[x][y] == 'O' {
+            if map[y][x] == 'O' {
                 sum += 100 * y + x;
             }
         }
